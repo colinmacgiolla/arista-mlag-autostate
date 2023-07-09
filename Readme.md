@@ -15,6 +15,6 @@ management api http-commands
 Create an event-handler to react on interface state changes and call the script
 ```bash
 event-handler MLAG_SVI_AUTOSTATE
-   trigger on-logging
+   trigger on-logging LINEPROTO-5-UPDOWN
    action bash /mnt/flash/mlagAutostate.py
 ```
