@@ -23,6 +23,10 @@ class mlagAutostate( object ):
    def __init__(self, excluded = None):
       self.excluded = excluded
       self.eapiConn_ = jsonrpclib.Server( "unix:/var/run/command-api.sock" )
+      self.svis = []
+      self.vlans = {}
+      self._autostate = {}
+
       self._getMlagInfo()
       self._getRoutedInterfaces()
       self._getAutostate()
@@ -36,7 +40,7 @@ class mlagAutostate( object ):
    def _getRoutedInterfaces(self):
       # Create a list of SVIs, excluding the MLAG SVI
       data = self.eapiConn_.runCmds(1, ['show ip interface'])
-      self.svis = []
+
       for interface in data[0]['interfaces']:
          if 'Vlan' in interface and interface != self.mlagInterface:
             if self.excluded is not None:
@@ -50,7 +54,7 @@ class mlagAutostate( object ):
    def _getVlans(self):
       # Create a dict of SVIs, with each key mapping to a list of downstream interfaces
       data = self.eapiConn_.runCmds(1, ['show vlan'])
-      self.vlans = {}
+
       for vlan in data[0]['vlans']:
          if "Vlan"+vlan not in self.svis:
             # Skip any VLANs that don't have SVIs
@@ -64,8 +68,8 @@ class mlagAutostate( object ):
                self.vlans[vlan] = list( data[0]['vlans'][vlan]['interfaces'].keys() )
 
    def _getAutostate(self):
-      self._autostate = {}
       data = self.eapiConn_.runCmds(1, ['show running-config interfaces vlan 1-4094'],"text")
+      
       for entry in data[0]['output'].split('interface')[1:]:
          vlan = entry.split("\n")[0].strip()
          if 'no autostate' in entry:
