@@ -19,15 +19,15 @@
 import jsonrpclib
 
 class mlagAutostate( object ):
-   
+
    def __init__(self, excluded = None):
       self.excluded = excluded
       self.eapiConn_ = jsonrpclib.Server( "unix:/var/run/command-api.sock" )
       self._getMlagInfo()
       self._getRoutedInterfaces()
+      self._getAutostate()
       self._getVlans()
 
-      
    def _getMlagInfo(self):
       data = self.eapiConn_.runCmds(1, ['show mlag'])
       self.mlagInterface = data[0]['localInterface']
@@ -47,25 +47,39 @@ class mlagAutostate( object ):
             else:
                self.svis.append(interface)
 
-
    def _getVlans(self):
       # Create a dict of SVIs, with each key mapping to a list of downstream interfaces
       data = self.eapiConn_.runCmds(1, ['show vlan'])
       self.vlans = {}
       for vlan in data[0]['vlans']:
          if "Vlan"+vlan not in self.svis:
+            # Skip any VLANs that don't have SVIs
+            pass
+         elif data[0]['vlans'][vlan]['dynamic'] == True:
+            # Skip dynamic vlans
             pass
          else:
-            self.vlans[vlan] = list( data[0]['vlans'][vlan]['interfaces'].keys() )
+            if self._autostate["Vlan"+vlan]:
+               # Only add SVI-VLANs to the list if autostate is enabled
+               self.vlans[vlan] = list( data[0]['vlans'][vlan]['interfaces'].keys() )
 
+   def _getAutostate(self):
+      self._autostate = {}
+      data = self.eapiConn_.runCmds(1, ['show running-config interfaces vlan 1-4094'],"text")
+      for entry in data[0]['output'].split('interface'):
+         vlan = entry.split("\n")[0].strip()
+         if 'no autostate' in entry:
+            self._autostate[vlan] = False
+         else:
+            self._autostate[vlan] = True
 
    def setIfaceState(self, svi, state='no shutdown'):
       self.eapiConn_.runCmds(1, ['enable', 'configure', 'interface Vlan%s' % svi, '%s' % state, 'write'] )
-      
+
 
 
 def main():
-   
+
    # To exclude a single SVI from this proccess, add its name as an argument to mlagAutostate()
    # e.g. autostate = mlagAutostate('Vlan4093')
    autostate = mlagAutostate()
@@ -81,9 +95,7 @@ def main():
       else:
          autostate.setIfaceState(vlan, 'no shutdown')
 
-
-   return 
-
+   return
 
 
 if __name__ == "__main__":
