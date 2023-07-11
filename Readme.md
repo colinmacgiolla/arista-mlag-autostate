@@ -9,7 +9,9 @@ This script is designed to emulate the autostate behaviour, and is triggered whe
 
 If an SVI has only the Cpu, MLAG Peer-Link and Vxlan1 interfaces up, then this script will shutdown the SVI. When a downstream interface comes up, the SVI will be un-shut.
 
-*Note:* If you have routing between the TOR pair e.g. an iBGP session, this should be set [here](https://github.com/colinmacgiolla/arista-mlag-autostate/blob/c46484bd5d39e3c4eb5f22bc72c5139f4c9bda6d/mlagAutostate.py#L71) with the name of the SVI e.g. `Vlan4093` so that this interface is excluded.
+*Note1:* Any interfaces with `no autostate` configured will be excluded from the script actions. If there is an additional interface that should be excluded, see *Note2*.
+
+*Note2:* If you have routing between the TOR pair e.g. an iBGP session, this should be set [here](https://github.com/colinmacgiolla/arista-mlag-autostate/blob/c46484bd5d39e3c4eb5f22bc72c5139f4c9bda6d/mlagAutostate.py#L71) with the name of the SVI e.g. `Vlan4093` so that this interface is excluded.
 
 ## Requirements
 * The eAPI socket must be enabled
