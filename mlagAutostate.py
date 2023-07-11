@@ -66,7 +66,7 @@ class mlagAutostate( object ):
    def _getAutostate(self):
       self._autostate = {}
       data = self.eapiConn_.runCmds(1, ['show running-config interfaces vlan 1-4094'],"text")
-      for entry in data[0]['output'].split('interface'):
+      for entry in data[0]['output'].split('interface')[1:]:
          vlan = entry.split("\n")[0].strip()
          if 'no autostate' in entry:
             self._autostate[vlan] = False
