@@ -18,6 +18,8 @@ management api http-commands
    protocol unix-socket
       no shutdown
 ```
+## Installation
+Copy the [mlagAutostate.py](https://github.com/colinmacgiolla/arista-mlag-autostate/blob/main/mlagAutostate.py) script to `/mnt/flash` on the switches in question.
 
 ## Usage
 Create an event-handler to react on interface state changes and call the script
